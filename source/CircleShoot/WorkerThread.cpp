@@ -11,56 +11,74 @@
 
 using namespace Sexy;
 
-WorkerThread::WorkerThread()
+WorkerThread::WorkerThread() //11-19
 {
-	mShutdown = false;
-	mTaskProc = NULL;
-	mUnk1 = CreateEventA(0, FALSE, FALSE, NULL);
-	mUnk2 = CreateEventA(0, FALSE, FALSE, NULL);
+	mTask = NULL;
+	mTaskArg = NULL;
+	mStopped = false;
+	mSignalEvent = CreateEventA(0, FALSE, FALSE, NULL); //C++
+	mDoneEvent = CreateEventA(0, FALSE, FALSE, NULL); //C++
 
-	_beginthread((void(*)(void*)) WorkerThread::StaticThreadProc, 0, this);
+	_beginthread((void(*)(void*)) StaticThreadProc, 0, this); //C++
 }
 
-WorkerThread::~WorkerThread()
+WorkerThread::~WorkerThread() //24-32
 {
-}
-
-void WorkerThread::WaitForTask()
-{
-	if (mTaskProc)
+	if (mTask)
 	{
-		WaitForSingleObject(mUnk2, 1000);
+		while (mTask)
+			WaitForSingleObject(mDoneEvent, 1000);
 	}
-
-	ResetEvent(mUnk2);
+	mStopped = true;
+	SetEvent(mSignalEvent);
+	WaitForSingleObject(mDoneEvent, 5000);
+	CloseHandle(mSignalEvent);
+	CloseHandle(mDoneEvent);
 }
 
-void WorkerThread::DoTask(void (*theTaskProc)(void*), void* theParam)
+void WorkerThread::StaticThreadProc(HANDLE* that) //37-42 | C++ only
 {
-	WaitForTask();
+	//Some comment
 
-	mTaskProc = theTaskProc;
-	mParam = theParam;
-
-	SetEvent(mUnk1);
+	SetThreadPriority(GetCurrentThread(), -2);
+	//ThreadProc; //?
 }
 
-void WorkerThread::StaticThreadProc(WorkerThread* thr) 
+void WorkerThread::ThreadProc() //47-63
 {
-	HANDLE ct = GetCurrentThread();
-	SetThreadPriority(ct, THREAD_PRIORITY_LOWEST);
-	WaitForSingleObject(thr->mUnk1, 1000);
-	while (!thr->mShutdown)
+	WaitForSingleObject(mSignalEvent, 1000);
+	while (!mStopped)
 	{
-		if (thr->mTaskProc) {
-			thr->mTaskProc(thr->mParam);
-			thr->mTaskProc = NULL;
-
-			SetEvent(thr->mUnk2);
+		if (mTask)
+		{
+			mTask(mTaskArg);
+			mTask = 0;
+			SetEvent(mDoneEvent);
 		}
+		WaitForSingleObject(mSignalEvent, 1000);
+	}
+	SetEvent(mDoneEvent);
+}
 
-		WaitForSingleObject(thr->mUnk1, 1000);
+void WorkerThread::WaitForTask() //68-73
+{
+	while (mTask)
+	{
+		WaitForSingleObject(mDoneEvent, 1000);
 	}
 
-	SetEvent(thr->mUnk2);
+	ResetEvent(mDoneEvent);
+}
+
+void WorkerThread::DoTask(void (*theTask)(void*), void* theTaskArg) //78-83
+{
+	while (mTask)
+		WaitForSingleObject(mDoneEvent, 1000);
+
+	ResetEvent(mDoneEvent);
+
+	mTask = theTask;
+	mTaskArg = theTaskArg;
+
+	SetEvent(mSignalEvent);
 }
