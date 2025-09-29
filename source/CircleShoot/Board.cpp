@@ -1349,7 +1349,7 @@ void Board::Update()
 
 void Board::Draw(Graphics *g)
 {
-    if (mApp->mWorkerThread->mTaskProc)
+    if (mApp->mWorkerThread->mTask)
     {
         mApp->mWorkerThread->WaitForTask();
     }

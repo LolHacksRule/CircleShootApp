@@ -14,7 +14,6 @@ using namespace Sexy;
 WorkerThread::WorkerThread() //11-19
 {
 	mTask = NULL;
-	mTaskArg = NULL;
 	mStopped = false;
 	mSignalEvent = CreateEventA(0, FALSE, FALSE, NULL); //C++
 	mDoneEvent = CreateEventA(0, FALSE, FALSE, NULL); //C++
@@ -22,63 +21,57 @@ WorkerThread::WorkerThread() //11-19
 	_beginthread((void(*)(void*)) StaticThreadProc, 0, this); //C++
 }
 
-WorkerThread::~WorkerThread() //24-32
+WorkerThread::~WorkerThread()
 {
-	if (mTask)
-	{
-		while (mTask)
-			WaitForSingleObject(mDoneEvent, 1000);
-	}
-	mStopped = true;
-	SetEvent(mSignalEvent);
-	WaitForSingleObject(mDoneEvent, 5000);
-	CloseHandle(mSignalEvent);
-	CloseHandle(mDoneEvent);
+	//Needed?
+	
+	//if (mTask)
+	//{
+	//	while (mTask)
+	//		WaitForSingleObject(mDoneEvent, 1000);
+	//}
+	//ResetEvent(mDoneEvent);
+	//mStopped = true;
+	//SetEvent(mSignalEvent);
+	//WaitForSingleObject(mDoneEvent, 5000);
+	//CloseHandle(mSignalEvent);
+	//CloseHandle(mDoneEvent);
 }
 
-void WorkerThread::StaticThreadProc(HANDLE* that) //37-42 | C++ only
-{
-	//Some comment
-
-	SetThreadPriority(GetCurrentThread(), -2);
-	//ThreadProc; //?
-}
-
-void WorkerThread::ThreadProc() //47-63
-{
-	WaitForSingleObject(mSignalEvent, 1000);
-	while (!mStopped)
-	{
-		if (mTask)
-		{
-			mTask(mTaskArg);
-			mTask = 0;
-			SetEvent(mDoneEvent);
-		}
-		WaitForSingleObject(mSignalEvent, 1000);
-	}
-	SetEvent(mDoneEvent);
-}
-
-void WorkerThread::WaitForTask() //68-73
-{
-	while (mTask)
-	{
-		WaitForSingleObject(mDoneEvent, 1000);
-	}
-
-	ResetEvent(mDoneEvent);
-}
-
-void WorkerThread::DoTask(void (*theTask)(void*), void* theTaskArg) //78-83
+void WorkerThread::WaitForTask()
 {
 	while (mTask)
 		WaitForSingleObject(mDoneEvent, 1000);
 
 	ResetEvent(mDoneEvent);
+}
+
+void WorkerThread::DoTask(void (*theTask)(void*), void* theTaskArg)
+{
+	WaitForTask();
 
 	mTask = theTask;
 	mTaskArg = theTaskArg;
 
 	SetEvent(mSignalEvent);
+}
+
+void WorkerThread::StaticThreadProc(WorkerThread* that)
+{
+	HANDLE ct = GetCurrentThread();
+	SetThreadPriority(ct, THREAD_PRIORITY_LOWEST);
+	WaitForSingleObject(that->mSignalEvent, 1000);
+	while (!that->mStopped)
+	{
+		if (that->mTask) {
+			that->mTask(that->mTaskArg);
+			that->mTask = NULL;
+
+			SetEvent(that->mDoneEvent);
+		}
+
+		WaitForSingleObject(that->mSignalEvent, 1000);
+	}
+
+	SetEvent(that->mSignalEvent);
 }

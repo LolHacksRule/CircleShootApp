@@ -15,22 +15,19 @@ namespace Sexy
 
 	class WorkerThread
 	{
-	protected:
+	public:
 		HANDLE mSignalEvent;
 		HANDLE mDoneEvent;
 		void (*mTask)(void *);
 		void *mTaskArg;
 		bool mStopped;
-		void ThreadProc();
 	public:
-
 		WorkerThread();
 
 		virtual ~WorkerThread();
 
 		void DoTask(void (*theTask)(void*), void* theTaskArg);
 		void WaitForTask();
-		bool IsProcessingTask();
 
 		//For the O&D fork, only keeping for reference
 		// typedef ? conditionT
@@ -41,8 +38,7 @@ namespace Sexy
 		//Unlock();
 		//Wait(conditionT, int);
 
-	protected:
-		static void StaticThreadProc(HANDLE* that);
+		static void StaticThreadProc(WorkerThread* that);
 	};
 };
 
