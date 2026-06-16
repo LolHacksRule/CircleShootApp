@@ -60,18 +60,18 @@ namespace Sexy
         DialogType_User = 7,
         DialogType_CreateUser = 8,
         DialogType_RenameUser = 9,
-        DialogType_NameEntry = 10,
-        DialogType_NameConflict = 11,
-        DialogType_ConfirmDeleteUser = 12,
-        DialogType_ConfirmContinue = 13,
-        DialogType_Stats = 14,
-        DialogType_GetReady = 15,
-        DialogType_NextTemple = 16,
+        DialogType_NameEntry = 10, //9 on PopCap GH Vol 1 PS2
+        DialogType_NameConflict = 11, 
+        DialogType_ConfirmDeleteUser = 12, //10 on PopCap GH Vol 1 PS2
+        DialogType_ConfirmContinue = 13, //11 on PopCap GH Vol 1 PS2
+        DialogType_Stats = 14, //12 on PopCap GH Vol 1 PS2
+        DialogType_GetReady = 15, //13 on PopCap GH Vol 1 PS2
+        DialogType_NextTemple = 16, //14 on PopCap GH Vol 1 PS2
         DialogType_Register = 17,
         DialogType_RegisterError = 18,
         DialogType_AlreadyRegistered = 19,
-        DialogType_ConfirmMainMenu = 20,
-        DialogType_ConfirmQuit = 21,
+        DialogType_ConfirmMainMenu = 20, //18 on PopCap GH Vol 1 PS2
+        DialogType_ConfirmQuit = 21, //19 on PopCap GH Vol 1 PS2
         DialogType_NeedRegister = 22,
         DialogType_Max,
     };
